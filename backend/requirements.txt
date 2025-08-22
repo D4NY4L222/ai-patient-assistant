@@ -1,0 +1,5 @@
+﻿fastapi
+uvicorn[standard]
+python-dotenv
+openai
+numpy

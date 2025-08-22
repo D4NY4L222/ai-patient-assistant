@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Patient Inquiry Assistant</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --line:#e6e8ee; --text:#1f2937; --muted:#6b7280; --brand:#0f62fe; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:620px;margin:24px auto;padding:0 12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.06);overflow:hidden}
+    .header{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:700}
+    #messages{min-height:360px;max-height:63vh;overflow-y:auto;padding:16px;background:#fbfcfe}
+    .row{margin:10px 0;display:flex}
+    .row.user{justify-content:flex-end}
+    .bubble{max-width:78%;padding:10px 12px;border-radius:12px;line-height:1.35}
+    .row.user .bubble{background:#e8f1ff}
+    .row.bot  .bubble{background:#eef1f6}
+    .typing{color:var(--muted);font-size:13px;padding:0 16px 10px}
+    .input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#fff}
+    #q{flex:1;padding:12px 14px;border-radius:10px;border:1px solid var(--line);outline:none}
+    #send{padding:12px 16px;border-radius:10px;background:var(--brand);color:#fff;border:none;cursor:pointer}
+    #send:disabled{opacity:.6;cursor:default}
+    .disc{color:var(--muted);font-size:13px;text-align:center;margin:10px 6px 0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">AI Patient Inquiry Assistant</div>
+      <div id="messages"></div>
+      <div class="input">
+        <input id="q" type="text" placeholder="Ask about the Signifier sleep therapy device: setup, usage, troubleshooting, appointments…" autocomplete="off" />
+        <button id="send" type="button">Send</button>
+      </div>
+    </div>
+    <p class="disc">⚠️ General information only. No medical advice.</p>
+  </div>
+
+  <script>
+    // Ensure DOM ready
+    (function () {
+      const messages = document.getElementById("messages");
+      const input    = document.getElementById("q");
+      const sendBtn  = document.getElementById("send");
+
+      if (!messages || !input || !sendBtn) {
+        alert("UI failed to load. Refresh the page (Ctrl+F5).");
+        return;
+      }
+
+      const API_BASE = window.location.origin; // e.g. http://127.0.0.1:8000
+
+      function addMsg(sender, text) {
+        const row = document.createElement("div");
+        row.className = "row " + sender;
+        const b = document.createElement("div");
+        b.className = "bubble";
+        b.textContent = text;
+        row.appendChild(b);
+        messages.appendChild(row);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      async function send() {
+        const text = (input.value || "").trim();
+        if (!text) return;
+
+        addMsg("user", text);
+        input.value = "";
+        input.focus();
+        sendBtn.disabled = true;
+
+        const typing = document.createElement("div");
+        typing.className = "typing";
+        typing.textContent = "Assistant is typing…";
+        messages.appendChild(typing);
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+          const res = await fetch(API_BASE + "/inquiry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text })
+          });
+          const ct = res.headers.get("content-type") || "";
+          if (!ct.includes("application/json")) {
+            typing.remove();
+            addMsg("bot", "Unexpected server response. Please refresh and try again.");
+            return;
+          }
+          const data = await res.json();
+          typing.remove();
+          addMsg("bot", data.answer || "Sorry, I couldn't process that.");
+        } catch (e) {
+          typing.remove();
+          addMsg("bot", "Network error. Please try again.");
+          console.error(e);
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
+
+      sendBtn.addEventListener("click", send);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+
+      // Clear, scoped greeting
+      addMsg("bot", "Hi! I’m the assistant for the Signifier sleep therapy device. I can help with setup, usage, troubleshooting, appointments and support. I can’t provide medical advice.");
+    })();
+  </script>
+</body>
+</html>
+
