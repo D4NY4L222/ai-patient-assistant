@@ -141,7 +141,7 @@ def topic_hint(q: str) -> Optional[str]:
     if ("app" in ql) or ("remote" in ql) or ("bluetooth" in ql):
         return ("The eXciteOSA app works as a remote: pair via Bluetooth, then start/pause sessions, adjust intensity, and view reminders/progress.")
     # mouthpiece
-    if ("mouthpiece" in ql) and (("replace" in ql) or "replacement" in ql or "how long" in ql or "when" in ql)):
+    if ("mouthpiece" in ql) and (("replace" in ql) or ("replacement" in ql) or ("how long" in ql) or ("when" in ql)):
         return ("Replace the mouthpiece every 90 days (or sooner if worn/damaged). Inspect regularly.")
     return None
 
